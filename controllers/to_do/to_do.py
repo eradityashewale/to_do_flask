@@ -5,9 +5,10 @@ from bson.objectid import ObjectId
 from controllers.to_do.token import require_api_key
 from database import todos_collection
 from bson.errors import InvalidId
-
+from database import limiter
 
 class AllTodo(Resource):
+    @limiter.limit("10 per minute")  # Rate limit for this specific route
     @require_api_key
     def get(self):
         page = int(request.args.get('page', 1))
