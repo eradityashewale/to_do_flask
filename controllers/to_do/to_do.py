@@ -51,9 +51,10 @@ class TODO(Resource):
 
     def post():
         data = request.get_json()
-        if not data.get('title') or not data.get('description'):
-            return ({"error": "Title and description are required"}), 400
-        
+        error_message, is_valid = validate_todo_data(data)
+        if not is_valid:
+            return {"error": error_message}, 400
+            
         new_todo = {
             'title': data['title'],
             'description': data['description'],
@@ -66,6 +67,9 @@ class TODO(Resource):
 
     def put(self, id):
         data = request.get_json()
+        error_message, is_valid = validate_todo_data(data)
+        if not is_valid:
+            return {"error": error_message}, 400
         updated_todo = {
             'title': data.get('title', ''),
             'description': data.get('description', ''),
@@ -87,3 +91,14 @@ class TODO(Resource):
             return ({"message": "Todo deleted"}), 200
         else:
             return ({"error": "Todo not found"}), 404
+        
+
+def validate_todo_data(data):
+        VALID_STATUSES = ['pending', 'in_progress', 'completed']
+        if not data.get('title'):
+            return "Title is required", False
+        if not data.get('description'):
+            return "Description is required", False
+        if data.get('status') and data['status'] not in VALID_STATUSES:
+            return f"Status must be one of {VALID_STATUSES}", False
+        return None, True
