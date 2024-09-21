@@ -12,11 +12,21 @@ class AllTodo(Resource):
     def get(self):
         page = int(request.args.get('page', 1))
         limit = int(request.args.get('limit', 10))
+        status_filter = request.args.get('status')
+        title_filter = request.args.get('title')
 
         # Calculate the skip value based on page and limit
         skip = (page - 1) * limit
+        skip = (page - 1) * limit
+
+        query = {}
+        if status_filter and status_filter in VALID_STATUSES:
+            query['status'] = status_filter
+        if title_filter:
+            query['title'] = {'$regex': title_filter, '$options': 'i'}  # Case-insensitive match
+
         todos = []
-        for todo in todos_collection.find().skip(skip).limit(limit):
+        for todo in todos_collection.find(query).skip(skip).limit(limit):
             todos.append({
                 'id': str(todo['_id']),
                 'title': todo['title'],
@@ -25,7 +35,7 @@ class AllTodo(Resource):
                 'created_at': todo['created_at'].strftime('%Y-%m-%d %H:%M:%S') if isinstance(todo['created_at'], datetime) else todo['created_at'],
                 'updated_at': todo['updated_at'].strftime('%Y-%m-%d %H:%M:%S') if isinstance(todo['updated_at'], datetime) else todo['updated_at']
             })
-        total_todos = todos_collection.count_documents({})
+        total_todos = todos_collection.count_documents(query)
         total_pages = (total_todos + limit - 1) // limit  # To get the total number of pages
 
         return {
@@ -100,8 +110,9 @@ class TODO(Resource):
             return ({"error": "Todo not found"}), 404
         
 
+VALID_STATUSES = ['pending', 'in_progress', 'completed']
+
 def validate_todo_data(data):
-        VALID_STATUSES = ['pending', 'in_progress', 'completed']
         if not data.get('title'):
             return "Title is required", False
         if not data.get('description'):
