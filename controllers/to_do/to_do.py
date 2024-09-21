@@ -2,11 +2,13 @@ from datetime import datetime
 from flask import request
 from flask_restful import Resource
 from bson.objectid import ObjectId
+from controllers.to_do.token import require_api_key
 from database import todos_collection
 from bson.errors import InvalidId
 
 
 class AllTodo(Resource):
+    @require_api_key
     def get(self):
         page = int(request.args.get('page', 1))
         limit = int(request.args.get('limit', 10))
@@ -34,6 +36,7 @@ class AllTodo(Resource):
         }, 200
 
 class TODO(Resource):
+    @require_api_key
     def get(self, id):
         try:
             todo = todos_collection.find_one({'_id': ObjectId(id)})
@@ -68,6 +71,7 @@ class TODO(Resource):
         result = todos_collection.insert_one(new_todo)
         return ({"message": "Todo created", "id": str(result.inserted_id)}), 201
 
+    @require_api_key
     def put(self, id):
         data = request.get_json()
         error_message, is_valid = validate_todo_data(data)
@@ -88,6 +92,7 @@ class TODO(Resource):
         else:
             return ({"error": "Todo not found"}), 404
 
+    @require_api_key
     def delete(self, id):
         result = todos_collection.delete_one({'_id': ObjectId(id)})
         if result.deleted_count:
@@ -105,3 +110,5 @@ def validate_todo_data(data):
         if data.get('status') and data['status'] not in VALID_STATUSES:
             return f"Status must be one of {VALID_STATUSES}", False
         return None, True
+
+
