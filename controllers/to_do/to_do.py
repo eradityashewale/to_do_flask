@@ -40,7 +40,6 @@ class TODO(Resource):
     def get(self, id):
         try:
             todo = todos_collection.find_one({'_id': ObjectId(id)})
-            print(id)
             if todo:
                 return ({
                     'id': str(todo['_id']),
