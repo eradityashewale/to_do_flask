@@ -1,18 +1,19 @@
-from flask import Flask, jsonify, request
-from pymongo import MongoClient
-
-from datetime import datetime
+from flask import Flask
+from flask_limiter import Limiter
 from flask_restful import Api
+from flask_limiter.util import get_remote_address
 
 from controllers.to_do.to_do import *
 
 
 app = Flask(__name__)
 
-# # MongoDB connection
-# client = MongoClient("localhost", 27017)
-# db = client.todo_db  # Database
-# todos_collection = db.todos  # Collection for todos
+# Initialize Limiter
+limiter = Limiter(
+    get_remote_address,
+    default_limits=["200 per day", "50 per hour"]  # Set your rate limits
+)
+limiter.init_app(app)
 
 api = Api(app)
 

@@ -2,3 +2,4 @@ flask
 pymongo
 flask_restful
 Flask-Testing
+Flask-Limiter
