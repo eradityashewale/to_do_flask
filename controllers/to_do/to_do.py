@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import jsonify, request
+from flask import request
 from flask_restful import Resource
 from bson.objectid import ObjectId
 from database import todos_collection
@@ -7,8 +7,13 @@ from database import todos_collection
 
 class AllTodo(Resource):
     def get(self):
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+
+        # Calculate the skip value based on page and limit
+        skip = (page - 1) * limit
         todos = []
-        for todo in todos_collection.find():
+        for todo in todos_collection.find().skip(skip).limit(limit):
             todos.append({
                 'id': str(todo['_id']),
                 'title': todo['title'],
@@ -17,7 +22,15 @@ class AllTodo(Resource):
                 'created_at': todo['created_at'].strftime('%Y-%m-%d %H:%M:%S') if isinstance(todo['created_at'], datetime) else todo['created_at'],
                 'updated_at': todo['updated_at'].strftime('%Y-%m-%d %H:%M:%S') if isinstance(todo['updated_at'], datetime) else todo['updated_at']
             })
-        return todos, 200
+        total_todos = todos_collection.count_documents({})
+        total_pages = (total_todos + limit - 1) // limit  # To get the total number of pages
+
+        return {
+            'todos': todos,
+            'page': page,
+            'total_pages': total_pages,
+            'total_todos': total_todos
+        }, 200
 
 class TODO(Resource):
 
