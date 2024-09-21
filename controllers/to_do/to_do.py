@@ -3,6 +3,7 @@ from flask import request
 from flask_restful import Resource
 from bson.objectid import ObjectId
 from database import todos_collection
+from bson.errors import InvalidId
 
 
 class AllTodo(Resource):
@@ -33,23 +34,25 @@ class AllTodo(Resource):
         }, 200
 
 class TODO(Resource):
-
     def get(self, id):
-        todo = todos_collection.find_one({'_id': ObjectId(id)})
-        print(id)
-        if todo:
-            return ({
-                'id': str(todo['_id']),
-                'title': todo['title'],
-                'description': todo['description'],
-                'status': todo['status'],
-                'created_at': todo['created_at'].strftime('%Y-%m-%d %H:%M:%S') if isinstance(todo['created_at'], datetime) else todo['created_at'],
-                'updated_at': todo['updated_at'].strftime('%Y-%m-%d %H:%M:%S') if isinstance(todo['updated_at'], datetime) else todo['updated_at']
-            }), 200
-        else:
-            return ({"error": "Todo not found"}), 404
-
-    def post():
+        try:
+            todo = todos_collection.find_one({'_id': ObjectId(id)})
+            print(id)
+            if todo:
+                return ({
+                    'id': str(todo['_id']),
+                    'title': todo['title'],
+                    'description': todo['description'],
+                    'status': todo['status'],
+                    'created_at': todo['created_at'].strftime('%Y-%m-%d %H:%M:%S') if isinstance(todo['created_at'], datetime) else todo['created_at'],
+                    'updated_at': todo['updated_at'].strftime('%Y-%m-%d %H:%M:%S') if isinstance(todo['updated_at'], datetime) else todo['updated_at']
+                }), 200
+            else:
+                return ({"error": "Todo not found"}), 404
+        except InvalidId:
+            return {"error": "Invalid ID format"}, 400
+        
+    def post(self):
         data = request.get_json()
         error_message, is_valid = validate_todo_data(data)
         if not is_valid:
