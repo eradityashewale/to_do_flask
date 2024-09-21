@@ -14,9 +14,10 @@ class AllTodo(Resource):
         limit = int(request.args.get('limit', 10))
         status_filter = request.args.get('status')
         title_filter = request.args.get('title')
+        sort_by = request.args.get('sort_by', 'created_at')  # Default sort by created_at
+        sort_order = request.args.get('sort_order', 'asc')  # Default sort order ascending
 
         # Calculate the skip value based on page and limit
-        skip = (page - 1) * limit
         skip = (page - 1) * limit
 
         query = {}
@@ -25,8 +26,11 @@ class AllTodo(Resource):
         if title_filter:
             query['title'] = {'$regex': title_filter, '$options': 'i'}  # Case-insensitive match
 
+        # Determine sort order
+        sort_direction = 1 if sort_order == 'asc' else -1  # 1 for ascending, -1 for descending
+        
         todos = []
-        for todo in todos_collection.find(query).skip(skip).limit(limit):
+        for todo in todos_collection.find(query).sort(sort_by, sort_direction).skip(skip).limit(limit):
             todos.append({
                 'id': str(todo['_id']),
                 'title': todo['title'],
