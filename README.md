@@ -89,7 +89,3 @@ To run unit tests for the API:
 python -m unittest discover
 
 
-## License
-
-This project is licensed under the MIT License.
-
