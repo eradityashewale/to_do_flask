@@ -4,3 +4,6 @@ flask_restful
 Flask-Testing
 Flask-Limiter
 requests
+docker
+flask-cors
+flask-swagger-ui
